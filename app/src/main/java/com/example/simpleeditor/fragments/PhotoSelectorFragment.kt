@@ -1,20 +1,23 @@
 package com.example.simpleeditor.fragments
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.DialogFragment
-import com.example.simpleeditor.R
+import androidx.lifecycle.ViewModelProvider
 import com.example.simpleeditor.databinding.FragmentPhotoSelectorBinding
+import com.example.simpleeditor.viewModel.ImageViewModel
 
 
 class PhotoSelectorFragment : DialogFragment() {
-    private lateinit var photoSelectorBinding: FragmentPhotoSelectorBinding
+    private  var photoSelectorBinding: FragmentPhotoSelectorBinding?=null
+    private lateinit var imageViewModel: ImageViewModel
 
 
 
@@ -24,36 +27,69 @@ class PhotoSelectorFragment : DialogFragment() {
     ): View {
         // Inflate the layout for this fragment
         photoSelectorBinding = FragmentPhotoSelectorBinding.inflate(inflater, container, false)
-        return photoSelectorBinding.root
+        return photoSelectorBinding!!.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        initView(view)
         clickOperations(view)
+    }
 
-
-
+    private fun initView(view: View) {
+        imageViewModel= ViewModelProvider(requireActivity())[ImageViewModel::class.java]
 
     }
 
 
     private fun clickOperations(view: View) {
-        photoSelectorBinding.consGallery.setOnClickListener {
+        photoSelectorBinding?.consGallery?.setOnClickListener {
             val intent=Intent(Intent.ACTION_PICK).apply {
-                type= "image/*"
+                type="image/*"
+            }
 
+            galleryLauncher.launch(intent)
+
+        }
+
+        photoSelectorBinding?.consCamera?.setOnClickListener {
+            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            startActivity(intent)
+            cameraLauncher.launch(intent)
+
+        }
+
+    }
+    private var cameraLauncher=registerForActivityResult(ActivityResultContracts.StartActivityForResult()){result->
+        if (result.resultCode==Activity.RESULT_OK){
+            val data:Uri?=result.data?.data
+            if (data!=null){
+                imageViewModel.setUriOfImg(data)
             }
             dismiss()
-            startActivity(intent)
         }
 
-        photoSelectorBinding.consCamera.setOnClickListener {
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+    }
+
+    private var galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){ result->
+        if (result.resultCode==Activity.RESULT_OK){
+            val data:Uri?=result.data?.data
+
+
+            if (data != null) {
+                imageViewModel.setUriOfImg(data)
+            }
             dismiss()
-            startActivity(intent)
+
 
         }
 
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        photoSelectorBinding=null
     }
 
 }

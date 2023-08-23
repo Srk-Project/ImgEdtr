@@ -12,10 +12,10 @@
         tools:layout="@layout/fragment_home" >
         <action
             android:id="@+id/action_homeFragment_to_editorFragment"
-            app:destination="@id/editorFragment" />
-        <action
-            android:id="@+id/action_homeFragment_to_settingFragment"
-            app:destination="@id/settingFragment" />
+            app:destination="@id/editorFragment"
+            app:popUpToInclusive="false"
+            />
+
         <action
             android:id="@+id/action_homeFragment_to_photoSelectorFragment"
             app:destination="@id/photoSelectorFragment" />
@@ -28,12 +28,12 @@
         <action
             android:id="@+id/action_editorFragment_to_featuresBottomSheetFragment2"
             app:destination="@id/featuresBottomSheetFragment2" />
+
+        <action
+            android:id="@+id/action_editorFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+
     </fragment>
-    <fragment
-        android:id="@+id/settingFragment"
-        android:name="com.example.simpleeditor.fragments.SettingFragment"
-        android:label="fragment_setting"
-        tools:layout="@layout/fragment_setting" />
     <dialog
         android:id="@+id/featuresBottomSheetFragment2"
         android:name="com.example.simpleeditor.fragments.FeaturesBottomSheetFragment"
@@ -44,4 +44,6 @@
         android:name="com.example.simpleeditor.fragments.PhotoSelectorFragment"
         android:label="fragment_photo_selector"
         tools:layout="@layout/fragment_photo_selector" />
+
+
 </navigation>
