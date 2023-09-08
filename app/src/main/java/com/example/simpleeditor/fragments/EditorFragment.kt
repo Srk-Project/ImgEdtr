@@ -18,7 +18,6 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
@@ -31,9 +30,6 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.view.forEachIndexed
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
@@ -49,17 +45,17 @@ import com.example.simpleeditor.databinding.FragmentEditorBinding
 import com.example.simpleeditor.models.FeaturesModel
 import com.example.simpleeditor.reusable.Constants
 import com.example.simpleeditor.viewModel.ImageViewModel
+import com.google.android.material.slider.RangeSlider
 import com.google.android.material.slider.Slider
+import com.google.android.material.slider.Slider.OnSliderTouchListener
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
-import java.lang.Exception
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 
 
-class EditorFragment : Fragment() {
+class EditorFragment : Fragment(){
     private var editorBinding: FragmentEditorBinding? = null
     private lateinit var navController: NavController
     private lateinit var imageViewModel: ImageViewModel
@@ -78,8 +74,6 @@ class EditorFragment : Fragment() {
     private lateinit var imgUri: Uri
     private lateinit var progressBar:ProgressBar
     private lateinit var handler: Handler
-
-
     private val executor = Executors.newSingleThreadExecutor()
 
     override fun onCreateView(
@@ -104,6 +98,8 @@ class EditorFragment : Fragment() {
 
         clickOperation(view)
 
+
+
     }
 
 
@@ -111,14 +107,19 @@ class EditorFragment : Fragment() {
         val iClick = object : IClickHandle {
             override fun clickHandle(
                 isReq: Boolean,
-                min: Int,
-                max: Int,
-                start: Int,
+                min: Float,
+                max: Float,
+                start: Float,
                 cardView: CardView,
-                tv: TextView
+                tv: TextView,
+                rangeSlider: RangeSlider,
+                step:Float
             ) {
 
+
                 editorBinding?.imgDiscard?.visibility=View.VISIBLE
+
+
                 recView.forEachIndexed { _, view ->
                     view.findViewById<CardView>(R.id.cv_img_features).background?.setTint(
                         ContextCompat.getColor(requireActivity(), R.color.white)
@@ -126,103 +127,70 @@ class EditorFragment : Fragment() {
                     view.findViewById<TextView>(R.id.txt_features).textSize = 12.0F
                     view.findViewById<TextView>(R.id.txt_features)
                         .setTypeface(null, Typeface.NORMAL)
+                    view.findViewById<RangeSlider>(R.id.seekbar).visibility=View.GONE
 
                 }
+
+
                 if (isReq) {
-                    editorBinding?.seekbar?.visibility = View.VISIBLE
-                    editorBinding?.seekbar?.stepSize= 3F
-                    editorBinding?.seekbar?.valueTo= max.toFloat()
-                    editorBinding?.seekbar?.valueFrom=min.toFloat()
+                    rangeSlider.visibility=View.VISIBLE
 
+                    if(tv.text.equals("Blur")){
 
-                    if(tv.text.equals("Filter1")){
                         showProgressbar()
                         clickDisable()
                         executor.execute {
-                            pyObject = pyFileObject.callAttr("applyFilter",1,true)
+                            if (rangeSlider.values[0].toInt()==0){
 
-                            val byteArray = pyObject.toJava(ByteArray::class.java)
-
-                            if (byteArray.isNotEmpty()) {
-                                try {
-                                    val bmp =
-                                        BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-                                    if (bmp != null) {
-                                        editorBinding?.mainImg?.setImageBitmap(bmp)
-                                    } else {
-                                        Log.d(
-                                            "information",
-                                            Thread.currentThread().name + "Bitmap is null"
-                                        )
-
-                                    }
-                                } catch (e: Exception) {
-                                    Log.d(
-                                        "information",
-                                        Thread.currentThread().name + "Error: ${e.message}"
-                                    )
-
-                                }
-                            } else {
-                                Log.d(
-                                    "information",
-                                    Thread.currentThread().name + " Byte array is empty"
-                                )
+                                callPyObject("applyFilter",1,true)
+                            }else{
+                                callPyObject("applyFilter",rangeSlider.values[0].toInt(),true)
                             }
-
-                            hideProgressbar()
-                            clickEnable()
-
                         }
                     }
-
-                } else {
-                    editorBinding?.seekbar?.visibility = View.INVISIBLE
-                }
 
                     if (tv.text.equals("GrayScale")) {
                         showProgressbar()
                         clickDisable()
                         executor.execute {
+                            callPyObject("grayScale",rangeSlider.values[0].toInt(),true)
 
-                           // operationGrayScale();
 
-                        pyObject = pyFileObject.callAttr("grayScale")
-
-                        val byteArray = pyObject.toJava(ByteArray::class.java)
-
-                        if (byteArray.isNotEmpty()) {
-                            try {
-                                val bmp =
-                                    BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-                                if (bmp != null) {
-                                    editorBinding?.mainImg?.setImageBitmap(bmp)
-                                } else {
-                                    Log.d(
-                                        "information",
-                                        Thread.currentThread().name + "Bitmap is null"
-                                    )
-
-                                }
-                            } catch (e: Exception) {
-                                Log.d(
-                                    "information",
-                                    Thread.currentThread().name + "Error: ${e.message}"
-                                )
-
-                            }
-                        } else {
-                            Log.d(
-                                "information",
-                                Thread.currentThread().name + " Byte array is empty"
-                            )
                         }
-
-                            hideProgressbar()
-                            clickEnable()
-
                     }
+
+                    if (tv.text.equals("Brightness")) {
+                        showProgressbar()
+                        clickDisable()
+                        executor.execute {
+                            callPyObject("brightness",rangeSlider.values[0].toInt(),true)
+
+
+                        }
+                    }
+                    if (tv.text.equals("Hue")) {
+                        showProgressbar()
+                        clickDisable()
+                        executor.execute {
+                            callPyObject("hue",rangeSlider.values[0].toInt(),true)
+                        }
+                    }
+                    if (tv.text.equals("Saturation")) {
+                        showProgressbar()
+                        clickDisable()
+                        executor.execute {
+                            callPyObject("saturation", rangeSlider.values[0].toInt(), true)
+                        }
+                    }
+
+
+
+
+                } else {
+                    rangeSlider.visibility = View.GONE
                 }
+
+
 
                 cardView.background?.setTint(
                     ContextCompat.getColor(
@@ -234,53 +202,59 @@ class EditorFragment : Fragment() {
                 tv.setTypeface(null, Typeface.BOLD)
                 tv.setTextColor(ContextCompat.getColor(requireActivity(), R.color.black))
 
-                editorBinding?.seekbar?.addOnChangeListener { slider, value, fromUser ->
-                    if(tv.text.equals("Filter1")){
-
-
+                rangeSlider.addOnChangeListener() { slider, value, fromUser ->
+                    if(tv.text.equals("Blur")){
                         showProgressbar()
                         clickDisable()
                         executor.execute {
                             var slider_value=value.toInt()
                             if (value==0F) (slider_value++)
-                            pyObject = pyFileObject.callAttr("applyFilter",slider_value,false)
+                            callPyObject("applyFilter",slider_value,false)
+                        }
+                    }
 
-                            val byteArray = pyObject.toJava(ByteArray::class.java)
+                    if (tv.text.equals("GrayScale")) {
+                        showProgressbar()
+                        clickDisable()
+                        executor.execute {
+                            callPyObject("grayScale",value.toInt(),false)
+                        }
+                    }
 
-                            if (byteArray.isNotEmpty()) {
-                                try {
-                                    val bmp =
-                                        BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-                                    if (bmp != null) {
-                                        editorBinding?.mainImg?.setImageBitmap(bmp)
-                                    } else {
-                                        Log.d(
-                                            "information",
-                                            Thread.currentThread().name + "Bitmap is null"
-                                        )
+                    if (tv.text.equals("Brightness")) {
+                        showProgressbar()
+                        clickDisable()
+                        executor.execute {
+                            callPyObject("brightness",value.toInt(),false)
 
-                                    }
-                                } catch (e: Exception) {
-                                    Log.d(
-                                        "information",
-                                        Thread.currentThread().name + "Error: ${e.message}"
-                                    )
 
-                                }
-                            } else {
-                                Log.d(
-                                    "information",
-                                    Thread.currentThread().name + " Byte array is empty"
-                                )
-                            }
+                        }
+                    }
+                    if (tv.text.equals("Hue")) {
+                        showProgressbar()
+                        clickDisable()
+                        executor.execute {
+                            callPyObject("hue",value.toInt(),false)
 
-                            hideProgressbar()
-                            clickEnable()
 
                         }
                     }
 
+                    if (tv.text.equals("Saturation")) {
+                        showProgressbar()
+                        clickDisable()
+                        executor.execute {
+                            callPyObject("saturation",value.toInt(),false)
+
+
+                        }
+                    }
+
+
+
+
                 }
+
 
 
 
@@ -298,17 +272,12 @@ class EditorFragment : Fragment() {
     private fun getList(): List<FeaturesModel> {
         val lists: MutableList<FeaturesModel> = ArrayList<FeaturesModel>()
 
-        lists.add(FeaturesModel(R.drawable.baseline_save_as_24, "GrayScale", false, -60, 180, 40))
-        lists.add(FeaturesModel(R.drawable.baseline_camera_alt_24, "Filter1", true, 0, 6, 0))
-        lists.add(FeaturesModel(R.drawable.baseline_camera_alt_24, "Filter2", false, -60, 180, 30))
-        lists.add(FeaturesModel(R.drawable.baseline_gallery, "Filter3", true, -60, 180, 20))
-        lists.add(FeaturesModel(R.drawable.baseline_gallery, "Filter4", true, -60, 180, 70))
-        lists.add(FeaturesModel(R.drawable.baseline_save_as_24, "Filter", true, -60, 180, 50))
-        lists.add(FeaturesModel(R.drawable.baseline_camera_alt_24, "Filter1", true, -60, 180, 50))
-        lists.add(FeaturesModel(R.drawable.baseline_camera_alt_24, "Filter2", true, -60, 180, 50))
-        lists.add(FeaturesModel(R.drawable.baseline_gallery, "Filter3", true, -60, 180, 50))
-        lists.add(FeaturesModel(R.drawable.baseline_gallery, "Filter4", true, -60, 180, 50))
-        lists.add(FeaturesModel(R.drawable.baseline_save_as_24, "Filter", true, -60, 130, 20))
+        lists.add(FeaturesModel(R.drawable.baseline_camera_alt_24, "Hue", true, 0F, 360F, 0F,5F))
+        lists.add(FeaturesModel(R.drawable.baseline_gallery, "Brightness", true, 0F,20F , 10F,1F))
+        lists.add(FeaturesModel(R.drawable.baseline_camera_alt_24, "Saturation", true, 0F, 20F, 10F,1F))
+        lists.add(FeaturesModel(R.drawable.baseline_camera_alt_24, "Blur", true, 0F, 6F, 0F,3F))
+        lists.add(FeaturesModel(R.drawable.baseline_save_as_24, "GrayScale", true, 0F, 6F, 0F,1F))
+
 
 
 
@@ -397,7 +366,6 @@ class EditorFragment : Fragment() {
 
             }
             editorBinding?.imgDiscard?.visibility=View.INVISIBLE
-            editorBinding?.seekbar?.visibility=View.INVISIBLE
             recView.forEachIndexed{_,view->
                 view.findViewById<CardView>(R.id.cv_img_features).background?.setTint(
                     ContextCompat.getColor(requireActivity(), R.color.white)
@@ -405,6 +373,8 @@ class EditorFragment : Fragment() {
                 view.findViewById<TextView>(R.id.txt_features).textSize = 12.0F
                 view.findViewById<TextView>(R.id.txt_features)
                     .setTypeface(null, Typeface.NORMAL)
+                view.findViewById<RangeSlider>(R.id.seekbar).visibility=View.GONE
+
             }
 
 
@@ -572,6 +542,60 @@ class EditorFragment : Fragment() {
         })
 
     }
+
+
+    private fun callPyObject(functionName:String,value:Int,isFirst:Boolean){
+        pyObject = if (isFirst) {
+            pyFileObject.callAttr(
+                functionName,
+                value, true
+            )
+        }else{
+            pyFileObject.callAttr(
+                functionName,
+                value, false
+            )
+        }
+        val byteArray = pyObject.toJava(ByteArray::class.java)
+
+        if (byteArray.isNotEmpty()) {
+            try {
+                val bmp =
+                    BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+                if (bmp != null) {
+                    editorBinding?.mainImg?.setImageBitmap(bmp)
+                } else {
+                    Log.d(
+                        "information",
+                        Thread.currentThread().name + "Bitmap is null"
+                    )
+                    hideProgressbar()
+                    clickEnable()
+
+                }
+            } catch (e: Exception) {
+                Log.d(
+                    "information",
+                    Thread.currentThread().name + "Error: ${e.message}"
+                )
+                hideProgressbar()
+                clickEnable()
+            }
+        } else {
+            Log.d(
+                "information",
+                Thread.currentThread().name + " Byte array is empty"
+            )
+            hideProgressbar()
+            clickEnable()
+        }
+
+        hideProgressbar()
+        clickEnable()
+
+
+    }
+
 
 
     override fun onDestroy() {

@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.simpleeditor.R
 import com.example.simpleeditor.fragments.IClickHandle
 import com.example.simpleeditor.models.FeaturesModel
+import com.google.android.material.slider.RangeSlider
 
 class FeaturesAdapter(private var mList: List<FeaturesModel>, private var mContext:Context,private var iClick:IClickHandle) : RecyclerView.Adapter<FeaturesAdapter.ViewHolder>() {
 
@@ -22,9 +23,9 @@ class FeaturesAdapter(private var mList: List<FeaturesModel>, private var mConte
 
     override fun onBindViewHolder(holder: FeaturesAdapter.ViewHolder, position: Int) {
         val item= mList[position]
-        holder.setAll(item.img,item.name)
+        holder.setAll(item.img,item.name,item.isRequired,item.min,item.max,item.start,item.step)
         holder.cardView.setOnClickListener {
-            iClick.clickHandle(item.isRequired,item.min,item.max,item.start,holder.cardView,holder.txt)
+            iClick.clickHandle(item.isRequired,item.min,item.max,item.start,holder.cardView,holder.txt,holder.rangeSlider,item.step)
         }
 
     }
@@ -36,9 +37,18 @@ class FeaturesAdapter(private var mList: List<FeaturesModel>, private var mConte
         private val img:ImageView =itemView.findViewById(R.id.img_features)
          var txt:TextView =itemView.findViewById(R.id.txt_features)
          var cardView:CardView=itemView.findViewById(R.id.cv_img_features)
+        var rangeSlider:RangeSlider=itemView.findViewById(R.id.seekbar)
 
 
-        fun setAll(image:Int,t:String){
+        fun setAll(image:Int,t:String,isReq:Boolean,min:Float,max:Float,start:Float,step:Float){
+            if (isReq){
+                rangeSlider.valueFrom=min
+                rangeSlider.valueTo=max
+                rangeSlider.stepSize=step
+               rangeSlider.values= listOf(start,start)
+
+            }
+
             img.setImageResource(image)
             txt.text = t
 

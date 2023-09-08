@@ -7,13 +7,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.GridLayoutManager
 import com.example.simpleeditor.R
 import com.example.simpleeditor.adapter.FeaturesAdapter
 import com.example.simpleeditor.databinding.FragmentFeaturesBottomSheetBinding
 import com.example.simpleeditor.models.FeaturesModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import java.util.Objects
 
 class FeaturesBottomSheetFragment : BottomSheetDialogFragment() {
     private lateinit var bottomSheetBinding: FragmentFeaturesBottomSheetBinding
