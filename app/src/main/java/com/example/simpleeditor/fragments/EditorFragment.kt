@@ -565,6 +565,12 @@ class EditorFragment : Fragment(){
         })
     }
 
+    private fun showToast(str:String){
+        handler.post(kotlinx.coroutines.Runnable {
+            Toast.makeText(requireActivity(), ""+str, Toast.LENGTH_LONG).show()
+        })
+    }
+
     private fun clickEnable(){
         handler.post(kotlinx.coroutines.Runnable {
             recView.forEachIndexed { index, view ->
@@ -593,17 +599,26 @@ class EditorFragment : Fragment(){
 
 
     private fun callPyObject(functionName:String,value:Int,isFirst:Boolean){
-        pyObject = if (isFirst) {
-            pyFileObject.callAttr(
-                functionName,
-                value, true
-            )
-        }else{
-            pyFileObject.callAttr(
-                functionName,
-                value, false
-            )
+        try {
+            pyObject = if (isFirst) {
+                pyFileObject.callAttr(
+                    functionName,
+                    value, true
+                )
+            }else{
+                pyFileObject.callAttr(
+                    functionName,
+                    value, false
+                )
+            }
+        }catch (e:Exception){
+            if (functionName=="eyeColor") showToast("Sorry, We are not able to detect any faces/eyes")
+
+            hideProgressbar()
+            clickEnable()
+            return
         }
+
         val byteArray = pyObject.toJava(ByteArray::class.java)
 
         if (byteArray.isNotEmpty()) {
