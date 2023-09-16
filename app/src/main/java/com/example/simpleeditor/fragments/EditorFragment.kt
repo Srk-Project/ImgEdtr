@@ -1,6 +1,7 @@
 package com.example.simpleeditor.fragments
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.DialogInterface
 import android.content.SharedPreferences
@@ -12,6 +13,7 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
@@ -52,6 +54,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
+import java.io.OutputStream
 import java.util.concurrent.Executors
 
 
@@ -75,6 +78,7 @@ class EditorFragment : Fragment(){
     private lateinit var progressBar:ProgressBar
     private lateinit var handler: Handler
     private val executor = Executors.newSingleThreadExecutor()
+    private  var recent_bmp:Bitmap?=null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -183,6 +187,15 @@ class EditorFragment : Fragment(){
                         }
                     }
 
+                    if (tv.text.equals("Eye")) {
+                        showProgressbar()
+                        clickDisable()
+                        executor.execute {
+                            callPyObject("eyeColor",rangeSlider.values[0].toInt(),true)
+
+                        }
+                    }
+
 
 
 
@@ -250,6 +263,16 @@ class EditorFragment : Fragment(){
                         }
                     }
 
+                    if (tv.text.equals("Eye")) {
+                        showProgressbar()
+                        clickDisable()
+                        executor.execute {
+                            callPyObject("eyeColor",value.toInt(),false)
+
+
+                        }
+                    }
+
 
 
 
@@ -277,6 +300,7 @@ class EditorFragment : Fragment(){
         lists.add(FeaturesModel(R.drawable.baseline_camera_alt_24, "Saturation", true, 0F, 20F, 10F,1F))
         lists.add(FeaturesModel(R.drawable.baseline_camera_alt_24, "Blur", true, 0F, 6F, 0F,3F))
         lists.add(FeaturesModel(R.drawable.baseline_save_as_24, "GrayScale", true, 0F, 6F, 0F,1F))
+        lists.add(FeaturesModel(R.drawable.baseline_camera_alt_24, "Eye", true, 0F, 360F, 0F,5F))
 
 
 
@@ -305,8 +329,18 @@ class EditorFragment : Fragment(){
             .setMessage("Save Your changes or discard them ?")
             .setCancelable(false)
             .setPositiveButton("Save", DialogInterface.OnClickListener { _, _ ->
+                if (recent_bmp==null){
+                    Toast.makeText(requireActivity(), "Make any changes to store image", Toast.LENGTH_SHORT).show()
+                }else{
+                    val name=editorBinding!!.etName.text
+                    val strs=name.trim().split(".")
+                    if (strs.size!=2) name.append(".").append(extension)
 
-                Toast.makeText(requireActivity(), "Saved", Toast.LENGTH_SHORT).show()
+                    saveBitmapToExternalStorage(requireActivity(), recent_bmp!!, editorBinding!!.etName.text.toString())
+                    Toast.makeText(requireActivity(), "Image Saved Successfully", Toast.LENGTH_SHORT).show()
+
+                }
+
             })
             .setNeutralButton("Cancel", DialogInterface.OnClickListener { _, _ ->
 
@@ -378,6 +412,20 @@ class EditorFragment : Fragment(){
             }
 
 
+        }
+
+        editorBinding?.img?.setOnClickListener{
+            if (recent_bmp==null){
+                Toast.makeText(requireActivity(), "Make any changes to store image", Toast.LENGTH_SHORT).show()
+            }else{
+                val name=editorBinding!!.etName.text
+                val strs=name.trim().split(".")
+                if (strs.size!=2) name.append(".").append(extension)
+
+                saveBitmapToExternalStorage(requireActivity(), recent_bmp!!, editorBinding!!.etName.text.toString())
+                Toast.makeText(requireActivity(), "Image Saved Successfully", Toast.LENGTH_SHORT).show()
+
+            }
         }
 
     }
@@ -560,10 +608,10 @@ class EditorFragment : Fragment(){
 
         if (byteArray.isNotEmpty()) {
             try {
-                val bmp =
+                recent_bmp =
                     BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-                if (bmp != null) {
-                    editorBinding?.mainImg?.setImageBitmap(bmp)
+                if (recent_bmp != null) {
+                    editorBinding?.mainImg?.setImageBitmap(recent_bmp)
                 } else {
                     Log.d(
                         "information",
@@ -594,6 +642,34 @@ class EditorFragment : Fragment(){
         clickEnable()
 
 
+    }
+
+
+    fun saveBitmapToExternalStorage(context: Context, bitmap: Bitmap, fileName: String){
+        val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "srk_img")
+
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+
+        val file = File(directory, fileName)
+
+        var outputStream: OutputStream? = null
+
+        try {
+            outputStream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            context.sendBroadcast(android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)))
+
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            outputStream?.close()
+        }
     }
 
 

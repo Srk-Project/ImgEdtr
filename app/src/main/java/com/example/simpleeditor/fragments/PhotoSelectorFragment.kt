@@ -54,8 +54,6 @@ class PhotoSelectorFragment : DialogFragment() {
 
         photoSelectorBinding?.consCamera?.setOnClickListener {
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            startActivity(intent)
-            cameraLauncher.launch(intent)
 
         }
 

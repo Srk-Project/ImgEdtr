@@ -55,13 +55,13 @@
 
     <com.google.android.material.slider.RangeSlider
         android:id="@+id/seekbar"
-        android:layout_width="150dp"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="5dp"
         android:progressBackgroundTint="#5A5A5A"
         android:thumb="@drawable/outline_circle"
-        android:thumbTint="@color/primary"
         android:visibility="gone"
+        android:thumbTint="@color/primary"
         app:layout_constraintEnd_toEndOf="@id/cv_img_features"
         app:layout_constraintStart_toStartOf="@id/cv_img_features"
         app:layout_constraintTop_toBottomOf="@id/cv_img_features" />

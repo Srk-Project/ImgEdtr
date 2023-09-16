@@ -54,6 +54,8 @@ class FeaturesBottomSheetFragment : BottomSheetDialogFragment() {
     private fun getList(): List<FeaturesModel> {
         val lists: MutableList<FeaturesModel> = ArrayList<FeaturesModel>()
 
+        /*
+
         lists.add(FeaturesModel(R.drawable.baseline_save_as_24, "Filter",true,-60,180,50))
         lists.add(FeaturesModel(R.drawable.baseline_add_a_photo_24, "Filter1",true,-60,180,50))
         lists.add(FeaturesModel(R.drawable.baseline_camera_alt_24, "Filter2",true,-60,180,50))
@@ -66,7 +68,7 @@ class FeaturesBottomSheetFragment : BottomSheetDialogFragment() {
         lists.add(FeaturesModel(R.drawable.baseline_gallery, "Filter4",true,-60,180,50))
         lists.add(FeaturesModel(R.drawable.baseline_save_as_24, "Filter",true,-60,180,50))
 
-
+*/
 
         return lists
 
